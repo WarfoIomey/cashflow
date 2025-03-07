@@ -1,13 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+# from django.contrib.auth.models import AbstractUser
 
 
 User = get_user_model()
 
 
-class CustomUser(AbstractUser):
-    """Кастомная модель пользователя."""
+# class CustomUser(AbstractUser):
+#     """Кастомная модель пользователя."""
 
 
 class Record(models.Model):
@@ -18,29 +18,36 @@ class Record(models.Model):
         help_text='Время создания записи',
         verbose_name='Добавлено'
     )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор записи',
+        help_text='Автор записи',
+        related_name='records',
+    )
     status = models.ForeignKey(
         'StatusMoney',
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         verbose_name='Статус',
         help_text='статус записи',
         null=True
     )
     type = models.ForeignKey(
         'TypeMoney',
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         verbose_name='Тип',
         help_text='Тип записи',
         null=True
     )
     category = models.ForeignKey(
         'Category',
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         verbose_name='Категория',
         help_text='Категория записи',
         null=True
     )
     comment = models.TextField(
-        required=False,
+        blank=False,
         help_text='Текст комментария',
         verbose_name='Комментарий'
     )
@@ -59,12 +66,9 @@ class StatusMoney(models.Model):
         verbose_name='Название',
         help_text='Название статуса, максимальная длинна строки 256'
     )
-    slug = models.SlugField(
-        unique=True,
-        verbose_name='Идентификатор',
-        help_text=('Идентификатор страницы для URL;'
-                   ' разрешены символы латиницы, цифры, дефис'
-                   ' и подчёркивание.')
+
+    description = models.TextField(
+        verbose_name='Описание'
     )
 
     class Meta:
@@ -83,12 +87,9 @@ class TypeMoney(models.Model):
         verbose_name='Тип',
         help_text='Тип денежных средств, максимальная длинна строки 256'
     )
-    slug = models.SlugField(
-        unique=True,
-        verbose_name='Идентификатор',
-        help_text=('Идентификатор страницы для URL;'
-                   ' разрешены символы латиницы, цифры, дефис'
-                   ' и подчёркивание.')
+
+    description = models.TextField(
+        verbose_name='Описание'
     )
 
     class Meta:
@@ -109,6 +110,12 @@ class Category(models.Model):
     )
     description = models.TextField(
         verbose_name='Описание'
+    )
+    type = models.ForeignKey(
+        TypeMoney,
+        on_delete=models.CASCADE,
+        verbose_name='Тип',
+        help_text='Тип денежных средств',
     )
     slug = models.SlugField(
         unique=True,
