@@ -1,0 +1,16 @@
+<div class="col d-flex justify-content-center">
+    <div class="card" style="width: 40rem;">
+      <div class="card-body">
+        <h5 class="card-title">{{ record.created_at }}</h5>
+        <h6 class="card-subtitle mb-2 text-muted">
+          <small>
+            {{ record.pub_date|date:"d E Y, H:i" }}<br>
+            От автора <a class="text-muted" href="{% url 'cashflow:profile' record.user.username %}">@{{ record.user.username }}</a> в
+            категории {% include "includes/category_link.html" %}
+          </small>
+        </h6>
+        {% comment %} <a href="{% url 'cashflow:post_detail' post.id %}" class="card-link">Читать полный текст</a> {% endcomment %}
+        {% comment %} <a href="{% url 'cashflow:post_detail' post.id %}" class="card-link text-muted">Комментарии ({{ record.comment_count }})</a> {% endcomment %}
+      </div>
+    </div>
+  </div>

@@ -1,0 +1,13 @@
+<div class="col d-flex justify-content-center">
+    <div class="card" style="width: 40rem;">
+      <div class="card-body">
+        <h5 class="card-title">{{ item.title }}</h5>
+        <p class="card-text">{{ item.description|truncatewords:10 }}</p>
+        {% if "/type/" in request.path %}
+          <a href="{% url 'cashflow:type_detail' item.id %}" class="card-link">Подробнее</a>
+        {% else %}
+          <a href="{% url 'cashflow:status_detail' item.id %}" class="card-link">Подробнее</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>

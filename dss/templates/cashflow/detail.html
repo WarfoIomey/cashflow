@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="col d-flex justify-content-center">
+    <div class="card" style="width: 40rem;">
+      <div class="card-body">
+        <h5 class="card-title">
+          {% if category %} 
+            {{ category.title }} 
+          {% elif type %}
+            {{ type.title }} 
+          {% elif subcategory %} 
+            {{ subcategory.title }}
+          {% else %}
+            {{ status.title}}
+          {% endif %}
+        </h5>
+        <p class="card-text">
+          {% if category %} 
+            {{ category.description|linebreaksbr }} 
+          {% elif type %} 
+            {{ type.description|linebreaksbr }} 
+          {% elif subcategory %} 
+            {{ subcategory.description|linebreaksbr }}
+          {% else %}
+            {{ status.description|linebreaksbr }} 
+          {% endif %}
+        </p>
+        {% if subcategory or status %}
+        <div class="mb-2">
+          <div class="card-link">
+            <a 
+                class="btn btn-sm text-muted" 
+                href="{% if status %}
+                  {% url "cashflow:edit_status" status.id %}
+                {% else %}
+                  {% url "cashflow:edit_subcategory" type_id category_slug subcategory.slug %}
+                {% endif %}" 
+                role="button"
+              >
+                Редактировать {% if subcategory %} подкатегорию {% else %} статус {% endif %}
+            </a>
+            <a 
+            class="btn btn-sm text-muted" 
+            href="{% if status %}
+              {% url "cashflow:delete_status" status.id %}
+            {% else %}
+              {% url "cashflow:delete_subcategory" type_id category_slug subcategory.slug %}
+            {% endif %}" 
+            role="button"
+            >
+              Удалить {% if subcategory %} подкатегорию {% else %} статус {% endif %}
+            </a>
+          </div>
+        </div>
+        {% else %}
+          {% if status %}
+          {% endif%}
+          <div class="mb-2">
+            {% if category %}
+              Подкатегории:
+            {% else %}
+              Категории:
+            {% endif %}
+            <ul>
+              {% for item in page_obj %}
+                <li>
+                  <a 
+                    href="{% if category %}
+                      {% url "cashflow:subcategory_detail" type_id category.slug item.slug %}
+                    {% else %}
+                      {% url "cashflow:category_detail" type.id item.slug %}
+                    {% endif %}" 
+                    class="card-link"
+                  >
+                    {{ item.title }}
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+            <div class="card-link">
+              <a 
+                class="btn btn-sm text-muted" 
+                href="{% if category %}
+                  {% url "cashflow:create_subcategory" type_id category.slug %}
+                {% else %}
+                  {% url "cashflow:create_category" type.id %}
+                {% endif %}" 
+                role="button"
+              >
+                Создать
+                {% if category %} 
+                  подкатегорию 
+                {% else %} 
+                  категорию 
+                {% endif %}
+              </a>
+              {% if type %}
+                <a 
+                  class="btn btn-sm text-muted" 
+                  href="{% url "cashflow:edit_type" type.id  %}" 
+                  role="button"
+                >
+                  Редактировать тип
+                </a>
+                <a 
+                  class="btn btn-sm text-muted" 
+                  href="{% url "cashflow:delete_type" type.id  %}" 
+                  role="button"
+                >
+                  Удалить тип
+                </a>
+              {% elif category %}
+                <a 
+                  class="btn btn-sm text-muted" 
+                  href="{% url "cashflow:edit_category" type_id category.slug  %}" 
+                  role="button"
+                >
+                  Редактировать категорию
+                </a>
+                <a 
+                  class="btn btn-sm text-muted" 
+                  href="{% url "cashflow:delete_category" type_id category.slug %}" 
+                  role="button"
+                >
+                  Удалить категорию
+                </a>
+              {% endif %}
+              {% comment %} <a 
+                class="btn btn-sm text-muted" 
+                href="{% url 'cashflow:edit_category' type.id  %}" 
+                role="button"
+              >
+                Редактировать
+              </a> {% endcomment %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

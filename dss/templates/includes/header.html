@@ -1,0 +1,46 @@
+{% load static %}
+<header>
+  <nav class="navbar navbar-light" style="background-color: lightskyblue">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'cashflow:index' %}">
+        Cashflow
+      </a>
+      {% with request.resolver_match.view_name as view_name %}
+        <ul class="nav  nav-pills">
+          <li class="nav-item">
+          </li>
+          <li class="nav-item">
+          </li>
+          {% if user.is_authenticated %}
+            <div class="btn-group" role="group" aria-label="Basic outlined example">
+              {% if '/type/' in request.path %}
+              <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
+                href="{% url 'cashflow:status' %}">Список статусов</a></button>
+                <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
+                  href="{% url 'cashflow:create_status' %}">Создать статус</a></button>
+                <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
+                  href="{% url 'cashflow:create_type' %}">Создать тип</a></button>
+              {% else %}
+                <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
+                  href="{% url 'cashflow:create_record' %}">Создать запись</a></button>
+                <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
+                  href="{% url 'cashflow:type' %}">Управление справочником</a></button>
+              {% endif %}
+              <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
+                  href="{% url 'cashflow:profile' user.username %}">{{ user.username }}</a></button>
+              <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
+                  href="{% url 'logout' %}">Выйти</a></button>
+            </div>
+          {% else %}
+            <div class="btn-group" role="group" aria-label="Basic outlined example">
+              <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
+                  href="{% url 'login' %}">Войти</a></button>
+              <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
+                  href="{% url 'registration' %}">Регистрация</a></button>
+            </div>
+          {% endif %}
+        </ul>
+      {% endwith %}
+    </div>
+  </nav>
+</header>

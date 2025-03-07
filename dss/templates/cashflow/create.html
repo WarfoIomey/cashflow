@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+{% block title %}
+  {% if '/edit/' in request.path %}
+    Редактирование записи
+  {% elif "/delete/" in request.path %}
+    Удаление записи
+  {% else %}
+    Добавление записи
+  {% endif %}
+{% endblock %}
+{% block content %}
+  <div class="col d-flex justify-content-center">
+    <div class="card" style="width: 40rem;">
+      <div class="card-header">
+        {% if '/edit/' in request.path %}
+          Редактирование записи
+        {% elif '/delete/' in request.path %}
+          Удаление записи
+        {% else %}
+          Добавление записи
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+            <label class="col-md-6 form-label">Статус:</label>
+            <div class="col-sm-5 mb-4">{{ form.status }}</div>
+            <label class="col-md-6 form-label" for="id_type">Тип:</label>
+            <div class="col-sm-5 mb-4">{{ form.type }}</div>
+            <label class="col-md-6 form-label" for="id_category">Категория:</label>
+            <div class="col-sm-5 mb-4">{{ form.category }}</div>
+            <label class="col-md-6 form-label" for="id_subcategory">Подкатегория:</label>
+            <div class="col-sm-5 mb-4">{{ form.subcategory }}</div>
+            {% bootstrap_button button_type="submit" content="Отправить"  %}
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(function () {
+        $("#id_type").change(function () {
+            var typeId = $(this).val();
+            $.ajax({
+                url: "{% url 'cashflow:ajax_load_categories' %}",
+                data: {"type_id": typeId},
+                success: function (data) {
+                    $("#id_category").html('<option value="">Выберите категорию</option>');
+                    $.each(data, function (index, category) {
+                        $("#id_category").append('<option value="' + category.id + '">' + category.title + '</option>');
+                    });
+                    $("#id_subcategory").html('<option value="">Сначала выберите категорию</option>');
+                }
+            });
+        });
+
+        $("#id_category").change(function () {
+            var categoryId = $(this).val();
+            $.ajax({
+                url: "{% url 'cashflow:ajax_load_subcategories' %}",
+                data: {"category_id": categoryId},
+                success: function (data) {
+                    $("#id_subcategory").html('<option value="">Выберите подкатегорию</option>');
+                    $.each(data, function (index, subcategory) {
+                        $("#id_subcategory").append('<option value="' + subcategory.id + '">' + subcategory.title + '</option>');
+                    });
+                }
+            });
+        });
+    });
+  </script>
+{% endblock %}

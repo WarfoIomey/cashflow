@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}
+  Справочник
+{% endblock %}
+{% block content %}
+  <h1 class="text-center mb-5">Список 
+    {% if "/type/" in request.path %}
+      типов
+    {% else %}
+      статусов
+      {% endif %}
+    денежных средств
+    </h1>
+  {% for item in page_obj %}
+    <article class="mb-5">
+      {% include "includes/item_card.html" %}
+    </article>
+  {% endfor %}
+  {% include "includes/paginator.html" %}
+{% endblock %}
