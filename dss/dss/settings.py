@@ -15,7 +15,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
@@ -58,12 +57,10 @@ ROOT_URLCONF = 'dss.urls'
 
 TEMPLATES_DIR = BASE_DIR / 'templates'
 
-AUTH_USER_MODEL = 'cashflow.CustomUser'
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [TEMPLATES_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -138,7 +135,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'login'
 
-OGIN_REDIRECT_URL = 'cashflow:index'
+LOGIN_REDIRECT_URL = 'cashflow:index'
 
 MEDIA_ROOT = BASE_DIR / 'media'
 
