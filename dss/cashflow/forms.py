@@ -1,12 +1,14 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
-from .models import Record, Type, Category, Subcategory, Status
+from .models import Category, Record, Type, Subcategory, Status
 
 User = get_user_model()
 
 
 class RecordFilterForm(forms.Form):
+    """Форма для фильтрации записей."""
+
     start_date = forms.DateField(
         required=False,
         widget=forms.DateInput(attrs={"type": "date"}),
@@ -40,6 +42,18 @@ class RecordFilterForm(forms.Form):
 
 
 class RecordForm(forms.ModelForm):
+    """Форма для записей."""
+
+    created_at = forms.DateField(
+        widget=forms.DateInput(
+            attrs={
+                'type': 'date',
+                'class': 'form-control',
+            },
+            format='%Y-%m-%d',
+        ),
+        required=False,
+    )
     status = forms.ModelChoiceField(
         required=False,
         queryset=Status.objects.all(),
@@ -78,6 +92,7 @@ class RecordForm(forms.ModelForm):
     comment = forms.Textarea()
 
     def __init__(self, *args, **kwargs):
+        """Метод для корректной динамической подгрузки формы."""
         super().__init__(*args, **kwargs)
         if 'type' in self.data:
             try:
@@ -100,16 +115,19 @@ class RecordForm(forms.ModelForm):
 
     class Meta:
         model = Record
-        exclude = ('user',)
-        widgets = {
-            'pub_date': forms.DateTimeInput(
-                format='%d-%m-%Y',
-                attrs={'type': 'datetime-local', 'class': 'form-control'}
-            )
-        }
+        fields = (
+            'status',
+            'type',
+            'category',
+            'subcategory',
+            'amount',
+            'comment',
+            'created_at',
+        )
 
 
 class StatusForm(forms.ModelForm):
+    """Форма для статусов."""
 
     class Meta:
         model = Status
@@ -117,6 +135,7 @@ class StatusForm(forms.ModelForm):
 
 
 class TypeForm(forms.ModelForm):
+    """Форма для типов."""
 
     class Meta:
         model = Type
@@ -124,6 +143,7 @@ class TypeForm(forms.ModelForm):
 
 
 class CategoryForm(forms.ModelForm):
+    """Форма для категорий."""
 
     class Meta:
         model = Category
@@ -131,14 +151,8 @@ class CategoryForm(forms.ModelForm):
 
 
 class SubcategoryForm(forms.ModelForm):
+    """Форма для подкатегорий."""
 
     class Meta:
         model = Subcategory
         fields = ('title', 'description', 'slug')
-
-
-class UserForm(forms.ModelForm):
-
-    class Meta:
-        model = User
-        fields = ('username', 'first_name', 'last_name', 'email', )
