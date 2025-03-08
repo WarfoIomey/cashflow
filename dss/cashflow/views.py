@@ -1,49 +1,63 @@
-from django.shortcuts import get_object_or_404, render
-from django.http import JsonResponse
-from django.views.generic import (
-    CreateView, DeleteView, DetailView, ListView, UpdateView
-)
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import get_user_model
-from django.db.models import Q
-from django.urls import reverse, reverse_lazy
-
-from .models import Record, Type, Category, Subcategory, Status
-from .mixins import (
-    StatusEditMixin,
-    TypeEditMixin,
-    CategoryEditMixin, 
-    SubcategoryEditMixin,
-    OnlyAuthorMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    UpdateView
 )
-from .forms import RecordForm, TypeForm, StatusForm, RecordFilterForm
+from django.urls import reverse, reverse_lazy
+from django.utils import timezone
+
+
+from .models import Category, Type, Record, Subcategory, Status
+from .mixins import (
+    CategoryEditMixin,
+    OnlyAuthorMixin,
+    RecordEditMixin,
+    TypeEditMixin,
+    StatusEditMixin,
+    SubcategoryEditMixin
+)
+from .forms import RecordForm, RecordFilterForm, TypeForm, StatusForm
 from .utils import get_types, get_categorys, get_subcategorys, get_status
 
 
-RECORD_PER_PAGE = 10
+RECORD_PER_PAGE: int = 3
 
 User = get_user_model()
 
 
 class RecordListView(LoginRequiredMixin, ListView):
-    """Получение всех записей"""
+    """Получение всех записей, с возможностью их отфильтровать."""
 
     model = Record
-    template_name = 'cashflow/index.html'
-    paginate_by = RECORD_PER_PAGE
+    template_name: str = 'cashflow/index.html'
+    paginate_by: int = RECORD_PER_PAGE
 
     def get_queryset(self):
         queryset = super().get_queryset().filter(user=self.request.user)
         form = RecordFilterForm(self.request.GET)
 
         if form.is_valid():
+            if (form.cleaned_data["start_date"] and
+                    form.cleaned_data["end_date"]):
+                queryset = queryset.filter(
+                    created_at__range=(
+                        form.cleaned_data["start_date"],
+                        form.cleaned_data["end_date"]
+                    )
+                )
             if form.cleaned_data["start_date"]:
                 queryset = queryset.filter(
-                    created_atdategte=form.cleaned_data["start_date"]
+                    created_at__gte=form.cleaned_data["start_date"]
                 )
             if form.cleaned_data["end_date"]:
                 queryset = queryset.filter(
-                    created_atdatelte=form.cleaned_data["end_date"]
+                    created_at__lte=form.cleaned_data["end_date"]
                 )
             if form.cleaned_data["status"]:
                 queryset = queryset.filter(status=form.cleaned_data["status"])
@@ -66,41 +80,97 @@ class RecordListView(LoginRequiredMixin, ListView):
         return context
 
 
-class RecordCreateView(LoginRequiredMixin, CreateView):
-    model = Record
-    template_name = 'cashflow/create.html'
-    form_class = RecordForm
+class RecordCreateView(LoginRequiredMixin, RecordEditMixin, CreateView):
+    """Создание записи."""
+
+    template_name: str = 'cashflow/create.html'
     success_url = reverse_lazy('cashflow:index')
 
     def form_valid(self, form):
         form.instance.user = self.request.user
+        form.instance.created_at = timezone.now()
         return super(RecordCreateView, self).form_valid(form)
 
 
+class RecordDetailView(LoginRequiredMixin, RecordEditMixin, DetailView):
+    """Обзор одной записи."""
+
+    pk_url_kwarg: str = 'record_id'
+    template_name: str = 'cashflow/detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        record = get_object_or_404(
+            Record,
+            id=self.kwargs['record_id'],
+            user=self.request.user
+        )
+        context['record'] = record
+        if record.status is not None:
+            context['status_title'] = record.status.title
+        else:
+            context['status_title'] = None
+        context['type_title'] = record.type.title
+        context['category_title'] = record.category.title
+        context['subcategory_title'] = record.subcategory.title
+        return context
+
+
+class RecordUpdateView(OnlyAuthorMixin, RecordEditMixin, UpdateView):
+    """Редактирование записи."""
+
+    template_name: str = 'cashflow/create.html'
+    pk_url_kwarg: str = 'record_id'
+
+    def get_success_url(self):
+        return reverse(
+            'cashflow:record_detail',
+            kwargs={'record_id': self.kwargs['record_id']}
+        )
+
+
+class RecordDeleteView(OnlyAuthorMixin, RecordEditMixin, DeleteView):
+    """Удаление записи."""
+    pk_url_kwarg: str = 'record_id'
+    template_name: str = 'cashflow/create.html'
+    success_url = reverse_lazy('cashflow:index')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        record = get_object_or_404(Record, pk=self.kwargs['record_id'])
+        context['form'] = RecordForm(instance=record)
+        return context
+
+
 class StatusListView(LoginRequiredMixin, ListView):
+    """Получение всех статусов."""
+
     model = Status
-    template_name = 'cashflow/list.html'
-    paginate_by = RECORD_PER_PAGE
+    template_name: str = 'cashflow/list.html'
+    paginate_by: int = RECORD_PER_PAGE
 
     def get_queryset(self):
         return get_status(self.request.user)
 
 
 class StatusDetailView(LoginRequiredMixin, DetailView):
+    """Обзор одного статуса."""
     model = Status
-    template_name = 'cashflow/detail.html'
-    pk_url_kwarg = 'status_id'
+    template_name: str = 'cashflow/detail.html'
+    pk_url_kwarg: str = 'status_id'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['status'] = get_object_or_404(
             Status,
-            id=self.kwargs['status_id']
+            id=self.kwargs['status_id'],
+            user=self.request.user,
         )
         return context
 
 
 class StatusCreateView(LoginRequiredMixin, StatusEditMixin, CreateView):
+    """Создание статуса."""
 
     def get_success_url(self):
         return reverse('cashflow:status')
@@ -111,7 +181,9 @@ class StatusCreateView(LoginRequiredMixin, StatusEditMixin, CreateView):
 
 
 class StatusUpdateView(OnlyAuthorMixin, StatusEditMixin, UpdateView):
-    pk_url_kwarg = 'status_id'
+    """Изменение статуса."""
+
+    pk_url_kwarg: str = 'status_id'
 
     def get_success_url(self):
         return reverse(
@@ -121,7 +193,9 @@ class StatusUpdateView(OnlyAuthorMixin, StatusEditMixin, UpdateView):
 
 
 class StatusDeleteView(OnlyAuthorMixin, StatusEditMixin, DeleteView):
-    pk_url_kwarg = 'status_id'
+    """Удаление статуса."""
+
+    pk_url_kwarg: str = 'status_id'
     success_url = reverse_lazy('cashflow:status')
 
     def get_context_data(self, **kwargs):
@@ -132,15 +206,18 @@ class StatusDeleteView(OnlyAuthorMixin, StatusEditMixin, DeleteView):
 
 
 class TypeListView(LoginRequiredMixin, ListView):
+    """Получение списка типов."""
+
     model = Type
-    template_name = 'cashflow/list.html'
-    paginate_by = RECORD_PER_PAGE
+    template_name: str = 'cashflow/list.html'
+    paginate_by: int = RECORD_PER_PAGE
 
     def get_queryset(self):
         return get_types(self.request.user)
 
 
 class TypeCreateView(LoginRequiredMixin, TypeEditMixin, CreateView):
+    """Создание типов."""
 
     def get_success_url(self):
         return reverse('cashflow:type')
@@ -151,7 +228,9 @@ class TypeCreateView(LoginRequiredMixin, TypeEditMixin, CreateView):
 
 
 class TypeUpdateView(OnlyAuthorMixin, TypeEditMixin, UpdateView):
-    pk_url_kwarg = 'type_id'
+    """Редактирование типов."""
+
+    pk_url_kwarg: str = 'type_id'
 
     def get_success_url(self):
         return reverse(
@@ -163,7 +242,9 @@ class TypeUpdateView(OnlyAuthorMixin, TypeEditMixin, UpdateView):
 
 
 class TypeDeleteView(OnlyAuthorMixin, TypeEditMixin, DeleteView):
-    pk_url_kwarg = 'type_id'
+    """Удаленение типов."""
+
+    pk_url_kwarg: str = 'type_id'
     success_url = reverse_lazy('cashflow:type')
 
     def get_context_data(self, **kwargs):
@@ -174,10 +255,12 @@ class TypeDeleteView(OnlyAuthorMixin, TypeEditMixin, DeleteView):
 
 
 class TypeDetailCategoryListView(LoginRequiredMixin, ListView):
+    """Получение всех категорий определенного типа."""
+
     model = Category
-    template_name = 'cashflow/detail.html'
-    paginate_by = RECORD_PER_PAGE
-    pk_url_kwarg = 'type_id'
+    template_name: str = 'cashflow/detail.html'
+    paginate_by: int = RECORD_PER_PAGE
+    pk_url_kwarg: str = 'type_id'
 
     def get_queryset(self):
         return get_categorys(self.kwargs['type_id'], self.request.user)
@@ -192,6 +275,8 @@ class TypeDetailCategoryListView(LoginRequiredMixin, ListView):
 
 
 class CategoryCreateView(LoginRequiredMixin, CategoryEditMixin, CreateView):
+    """Создание категории."""
+
     type_card = None
 
     def dispatch(self, request, *args, **kwargs):
@@ -211,7 +296,9 @@ class CategoryCreateView(LoginRequiredMixin, CategoryEditMixin, CreateView):
 
 
 class CategoryUpdateView(OnlyAuthorMixin, CategoryEditMixin, UpdateView):
-    slug_url_kwarg = 'category_slug'
+    """Редактирование категории."""
+
+    slug_url_kwarg: str = 'category_slug'
 
     def get_success_url(self):
         return reverse(
@@ -224,7 +311,9 @@ class CategoryUpdateView(OnlyAuthorMixin, CategoryEditMixin, UpdateView):
 
 
 class CategoryDeleteView(OnlyAuthorMixin, CategoryEditMixin, DeleteView):
-    slug_url_kwarg = 'category_slug'
+    """Удаление категории."""
+
+    slug_url_kwarg: str = 'category_slug'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -245,10 +334,12 @@ class CategoryDeleteView(OnlyAuthorMixin, CategoryEditMixin, DeleteView):
 
 
 class CategoryDetailSubcategoryListView(ListView):
+    """Получение всех подкатегорий определенной категории."""
+
     model = Subcategory
-    paginate_by = RECORD_PER_PAGE
-    slug_url_kwarg = 'category_slug'
-    template_name = 'cashflow/detail.html'
+    paginate_by: int = RECORD_PER_PAGE
+    slug_url_kwarg: str = 'category_slug'
+    template_name: str = 'cashflow/detail.html'
 
     def get_queryset(self):
         return get_subcategorys(
@@ -266,10 +357,12 @@ class CategoryDetailSubcategoryListView(ListView):
         return context
 
 
-class SubcategoryDetailListView(LoginRequiredMixin, DetailView):
+class SubcategoryDetailView(LoginRequiredMixin, DetailView):
+    """Обзор подкатегории."""
+
     model = Subcategory
-    slug_url_kwarg = 'sub_slug'
-    template_name = 'cashflow/detail.html'
+    slug_url_kwarg: str = 'sub_slug'
+    template_name: str = 'cashflow/detail.html'
 
     def get_queryset(self):
         return get_subcategorys(
@@ -289,6 +382,8 @@ class SubcategoryCreateView(
     SubcategoryEditMixin,
     CreateView
 ):
+    """Создание подкатегории."""
+
     category_card = None
 
     def dispatch(self, request, *args, **kwargs):
@@ -314,7 +409,9 @@ class SubcategoryCreateView(
 
 
 class SubcategoryUpdateView(OnlyAuthorMixin, SubcategoryEditMixin, UpdateView):
-    slug_url_kwarg = 'sub_slug'
+    """Редактирование подкатегории."""
+
+    slug_url_kwarg: str = 'sub_slug'
 
     def get_success_url(self):
         return reverse(
@@ -328,7 +425,9 @@ class SubcategoryUpdateView(OnlyAuthorMixin, SubcategoryEditMixin, UpdateView):
 
 
 class SubcategoryDeleteView(OnlyAuthorMixin, SubcategoryEditMixin, DeleteView):
-    slug_url_kwarg = 'sub_slug'
+    """Удаление подкатегории."""
+
+    slug_url_kwarg: str = 'sub_slug'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -349,27 +448,8 @@ class SubcategoryDeleteView(OnlyAuthorMixin, SubcategoryEditMixin, DeleteView):
         )
 
 
-class ProfileDetailView(ListView):
-    """Обзор профиля"""
-
-    model = Record
-    paginate_by = RECORD_PER_PAGE
-    template_name = 'cashflow/profile.html'
-    user = None
-
-    def get_queryset(self):
-        self.user = get_object_or_404(User, username=self.kwargs['username'])
-        return Record.objects.select_related(
-            'user', 'category'
-        ).filter(user=self.user)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['profile'] = self.user
-        return context
-
-
 def load_categories(request):
+    """Динамическая подгрузка категориев для создания записи."""
     type_id = request.GET.get('type_id')
     categories = Category.objects.filter(
         type_id=type_id,
@@ -379,6 +459,7 @@ def load_categories(request):
 
 
 def load_subcategories(request):
+    """Динамическая подгрузка подкатегории для создания записи."""
     category_id = request.GET.get('category_id')
     subcategories = Subcategory.objects.filter(
         category_id=category_id,
@@ -388,12 +469,15 @@ def load_subcategories(request):
 
 
 def page_not_found(request, exception):
+    """Перенаправление на страницу 404"""
     return render(request, 'pages/404.html', status=404)
 
 
 def csrf_failure(request, reason=''):
+    """Перенаправление на страницу 403"""
     return render(request, 'pages/403csrf.html', status=403)
 
 
 def failure_server(request):
+    """Перенаправление на страницу 500"""
     return render(request, 'pages/500.html', status=500)
