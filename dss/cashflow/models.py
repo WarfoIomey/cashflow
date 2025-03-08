@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils import timezone
 
 
 User = get_user_model()
@@ -8,10 +9,11 @@ User = get_user_model()
 class Record(models.Model):
     """Модель записи пользователя."""
 
-    created_at = models.DateTimeField(
-        auto_now_add=True,
+    created_at = models.DateField(
+        default=timezone.now,
         help_text='Время создания записи',
-        verbose_name='Добавлено'
+        verbose_name='Дата и время создания',
+        editable=True
     )
     user = models.ForeignKey(
         User,
@@ -79,7 +81,6 @@ class Status(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Автор статуса',
         help_text='Автор статуса',
-        related_name='status',
     )
     description = models.TextField(
         verbose_name='Описание'
