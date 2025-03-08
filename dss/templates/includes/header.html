@@ -36,8 +36,6 @@
                   </button>
               {% endif %}
               <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
-                  href="{% url 'cashflow:profile' user.username %}">{{ user.username }}</a></button>
-              <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
                   href="{% url 'logout' %}">Выйти</a></button>
             </div>
           {% else %}
