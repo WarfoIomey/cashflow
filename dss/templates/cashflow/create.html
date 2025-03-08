@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load django_bootstrap5 %}
+{% load widget_tweaks %}
 {% block title %}
   {% if '/edit/' in request.path %}
     Редактирование записи
@@ -22,22 +23,79 @@
         {% endif %}
       </div>
       <div class="card-body">
-        <form method="post" action="{% url 'cashflow:create_record'%}" enctype="multipart/form-data">
+        <form 
+          method="post" 
+          action="
+            {% if '/edit/' in request.path %}
+              {% url 'cashflow:edit_record' record.id %}
+            {% elif '/delete/' in request.path %}
+              {% url 'cashflow:delete_record' record.id %}
+            {% else %}
+              {% url 'cashflow:create_record' %}
+            {% endif %}" 
+          enctype="multipart/form-data"
+        >
             {% csrf_token %}
             <div class="form-group">
-            <label class="col-md-6 form-label">Статус:</label>
-            <div class="col-sm-5 mb-4">{{ form.status }}</div>
-            <label class="col-md-6 form-label" for="id_type">Тип:</label>
-            <div class="col-sm-5 mb-4">{{ form.type }}</div>
-            <label class="col-md-6 form-label" for="id_category">Категория:</label>
-            <div class="col-sm-5 mb-4">{{ form.category }}</div>
-            <label class="col-md-6 form-label" for="id_subcategory">Подкатегория:</label>
-            <div class="col-sm-5 mb-4">{{ form.subcategory }}</div>
-            <label class="col-md-6 form-label" for="id_subcategory">Сумма:</label>
-            <div class="col-sm-5 mb-4">{{ form.amount }}</div>
-            <label class="col-md-6 form-label" for="id_subcategory">Комментарий:</label>
-            <div class="col-sm-5 mb-4">{{ form.comment }}</div>
-            {% bootstrap_button button_type="submit" content="Отправить"  %}
+              {% if "/delete/" in request.path %}
+                <label class="col-md-6 form-label">Время создания:</label>
+                <div class="col-sm-5 mb-4">
+                  {{ form.created_at|add_class:"form-control"|attr:"readonly"|attr:"disabled"  }}
+                </div>
+                <label class="col-md-6 form-label">Статус:</label>
+                <div class="col-sm-5 mb-4">
+                  {{ form.status|add_class:"form-control"|attr:"readonly"|attr:"disabled" }}
+                </div>
+                <label class="col-md-6 form-label" for="id_type">Тип:</label>
+                <div class="col-sm-5 mb-4">
+                  {{ form.type|add_class:"form-control"|attr:"readonly"|attr:"disabled" }}
+                </div>
+                <label class="col-md-6 form-label" for="id_category">Категория:</label>
+                <div class="col-sm-5 mb-4">
+                  {{ form.category|add_class:"form-control"|attr:"readonly"|attr:"disabled" }}
+                </div>
+                <label class="col-md-6 form-label" for="id_subcategory">Подкатегория:</label>
+                <div class="col-sm-5 mb-4">
+                  {{ form.subcategory|add_class:"form-control"|attr:"readonly"|attr:"disabled" }}
+                </div>
+                <label class="col-md-6 form-label" for="id_subcategory">Сумма:</label>
+                <div class="col-sm-5 mb-4">
+                  {{ form.amount|add_class:"form-control"|attr:"readonly" }}
+                </div>
+                <label class="col-md-6 form-label" for="id_subcategory">Комментарий:</label>
+                <div class="col-sm-5 mb-4">
+                  {{ form.comment|add_class:"form-control"|attr:"readonly" }}
+                </div>
+              {% else %}
+                <label class="col-md-6 form-label">Время создания:</label>
+                <div class="col-sm-5 mb-4">
+                  {{ form.created_at  }}
+                </div>
+                <label class="col-md-6 form-label">Статус:</label>
+                <div class="col-sm-5 mb-4">
+                  {{ form.status }}
+                </div>
+                <label class="col-md-6 form-label" for="id_type">Тип:</label>
+                <div class="col-sm-5 mb-4">
+                  {{ form.type }}
+                </div>
+                <label class="col-md-6 form-label" for="id_category">Категория:</label>
+                <div class="col-sm-5 mb-4">
+                  {{ form.category }}
+                </div>
+                <label class="col-md-6 form-label" for="id_subcategory">Подкатегория:</label>
+                <div class="col-sm-5 mb-4">
+                  {{ form.subcategory }}
+                </div>
+                <label class="col-md-6 form-label" for="id_subcategory">Сумма:</label>
+                <div class="col-sm-5 mb-4">
+                  {{ form.amount }}
+                </div>
+                <label class="col-md-6 form-label" for="id_subcategory">Комментарий:</label>
+                <div class="col-sm-5 mb-4">
+                  {{ form.comment }}
+              {% endif %}
+              {% bootstrap_button button_type="submit" content="Отправить"  %}
             </div>
         </form>
       </div>
@@ -46,34 +104,50 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script>
     $(document).ready(function () {
-        $("#id_type").change(function () {
-            var typeId = $(this).val();
+        function loadCategories(typeId, selectedCategoryId) {
             $.ajax({
                 url: "{% url 'cashflow:ajax_load_categories' %}",
                 data: {"type_id": typeId},
                 success: function (data) {
                     $("#id_category").html('<option value="">Выберите категорию</option>');
                     $.each(data, function (index, category) {
-                        $("#id_category").append('<option value="' + category.id + '">' + category.title + '</option>');
+                        var selected = category.id == selectedCategoryId ? 'selected' : '';
+                        $("#id_category").append('<option value="' + category.id + '" ' + selected + '>' + category.title + '</option>');
                     });
-                    $("#id_subcategory").html('<option value="">Сначала выберите категорию</option>');
+                    if (selectedCategoryId) {
+                        loadSubcategories(selectedCategoryId, {{ object.subcategory.id }});
+                    }
                 }
             });
-        });
-
-        $("#id_category").change(function () {
-            var categoryId = $(this).val();
+        }
+        function loadSubcategories(categoryId, selectedSubcategoryId) {
             $.ajax({
                 url: "{% url 'cashflow:ajax_load_subcategories' %}",
                 data: {"category_id": categoryId},
                 success: function (data) {
                     $("#id_subcategory").html('<option value="">Выберите подкатегорию</option>');
                     $.each(data, function (index, subcategory) {
-                        $("#id_subcategory").append('<option value="' + subcategory.id + '">' + subcategory.title + '</option>');
+                        var selected = subcategory.id == selectedSubcategoryId ? 'selected' : '';
+                        $("#id_subcategory").append('<option value="' + subcategory.id + '" ' + selected + '>' + subcategory.title + '</option>');
                     });
                 }
             });
+        }
+        $("#id_type").change(function () {
+            var typeId = $(this).val();
+            loadCategories(typeId, null);
         });
+        $("#id_category").change(function () {
+            var categoryId = $(this).val();
+            loadSubcategories(categoryId, null);
+        });
+        {% if '/edit/' in request.path %}
+            var typeId = $("#id_type").val();
+            var categoryId = {{ object.category.id }};
+            if (typeId) {
+                loadCategories(typeId, categoryId);
+            }
+        {% endif %}
     });
-  </script>
+</script>
 {% endblock %}
