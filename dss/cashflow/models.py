@@ -1,13 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-# from django.contrib.auth.models import AbstractUser
 
 
 User = get_user_model()
-
-
-# class CustomUser(AbstractUser):
-#     """Кастомная модель пользователя."""
 
 
 class Record(models.Model):
@@ -26,25 +21,37 @@ class Record(models.Model):
         related_name='records',
     )
     status = models.ForeignKey(
-        'StatusMoney',
-        on_delete=models.CASCADE,
+        'Status',
+        on_delete=models.SET_NULL,
         verbose_name='Статус',
         help_text='статус записи',
-        null=True
+        null=True,
+        blank=True,
     )
     type = models.ForeignKey(
-        'TypeMoney',
+        'Type',
         on_delete=models.CASCADE,
         verbose_name='Тип',
         help_text='Тип записи',
-        null=True
+        null=True,
+        blank=False,
     )
     category = models.ForeignKey(
         'Category',
         on_delete=models.CASCADE,
         verbose_name='Категория',
         help_text='Категория записи',
-        null=True
+        null=True,
+        blank=False
+    )
+    subcategory = models.ForeignKey(
+        'Subcategory',
+        on_delete=models.CASCADE,
+        verbose_name='Подкатегория',
+        help_text='Подкатегория записи',
+        null=True,
+        blank=False
+
     )
     comment = models.TextField(
         blank=False,
@@ -54,11 +61,12 @@ class Record(models.Model):
     amount = models.PositiveIntegerField(
         default=0,
         help_text='Сумма, по умолчанию 0',
-        verbose_name='Сумма'
+        verbose_name='Сумма',
+        blank=False,
     )
 
 
-class StatusMoney(models.Model):
+class Status(models.Model):
     """Модель статуса денежных средств."""
 
     title = models.CharField(
@@ -66,7 +74,13 @@ class StatusMoney(models.Model):
         verbose_name='Название',
         help_text='Название статуса, максимальная длинна строки 256'
     )
-
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор статуса',
+        help_text='Автор статуса',
+        related_name='status',
+    )
     description = models.TextField(
         verbose_name='Описание'
     )
@@ -79,7 +93,7 @@ class StatusMoney(models.Model):
         return self.title
 
 
-class TypeMoney(models.Model):
+class Type(models.Model):
     """Тип денежных средств."""
 
     title = models.CharField(
@@ -87,7 +101,13 @@ class TypeMoney(models.Model):
         verbose_name='Тип',
         help_text='Тип денежных средств, максимальная длинна строки 256'
     )
-
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор Типа',
+        help_text='Автор Типа',
+        related_name='type',
+    )
     description = models.TextField(
         verbose_name='Описание'
     )
@@ -108,11 +128,18 @@ class Category(models.Model):
         verbose_name='Название категории',
         help_text='Название категории, максимальная длинна строки 256'
     )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор категории',
+        help_text='Автор категории',
+        related_name='category',
+    )
     description = models.TextField(
         verbose_name='Описание'
     )
     type = models.ForeignKey(
-        TypeMoney,
+        Type,
         on_delete=models.CASCADE,
         verbose_name='Тип',
         help_text='Тип денежных средств',
@@ -133,13 +160,20 @@ class Category(models.Model):
         return self.title
 
 
-class SubCategory(models.Model):
+class Subcategory(models.Model):
     """Модель подкатегорий."""
 
     title = models.CharField(
         max_length=256,
         verbose_name='Название подкатегории',
         help_text='Название подкатегории, максимальная длинна строки 256'
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор подкатегории',
+        help_text='Автор подкатегории',
+        related_name='subcategory',
     )
     category = models.ForeignKey(
         Category,
