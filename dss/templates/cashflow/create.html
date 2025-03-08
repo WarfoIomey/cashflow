@@ -22,7 +22,7 @@
         {% endif %}
       </div>
       <div class="card-body">
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" action="{% url 'cashflow:create_record'%}" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="form-group">
             <label class="col-md-6 form-label">Статус:</label>
@@ -33,6 +33,10 @@
             <div class="col-sm-5 mb-4">{{ form.category }}</div>
             <label class="col-md-6 form-label" for="id_subcategory">Подкатегория:</label>
             <div class="col-sm-5 mb-4">{{ form.subcategory }}</div>
+            <label class="col-md-6 form-label" for="id_subcategory">Сумма:</label>
+            <div class="col-sm-5 mb-4">{{ form.amount }}</div>
+            <label class="col-md-6 form-label" for="id_subcategory">Комментарий:</label>
+            <div class="col-sm-5 mb-4">{{ form.comment }}</div>
             {% bootstrap_button button_type="submit" content="Отправить"  %}
             </div>
         </form>
