@@ -1,24 +1,27 @@
 from django.shortcuts import get_object_or_404
-from django.core.exceptions import ObjectDoesNotExist
 
-from .models import TypeMoney, Category, SubCategory, StatusMoney
+from .models import Type, Category, Subcategory, Status
 
 
-def get_types():
+def get_types(user):
     """Получение постов"""
-    return TypeMoney.objects.all()
+    return Type.objects.select_related('user').filter(user=user)
 
 
-def get_status():
-    return StatusMoney.objects.all()
+def get_status(user):
+    return Status.objects.select_related('user').filter(user=user)
 
 
-def get_categorys(pk):
-    return Category.objects.select_related('type').filter(type=pk)
+def get_categorys(pk, user):
+    return Category.objects.select_related('type','user').filter(
+        type=pk,
+        user=user
+    )
 
 
-def get_subcategorys(slug):
+def get_subcategorys(slug, user):
     category = get_object_or_404(Category, slug=slug)
-    return SubCategory.objects.select_related('category').filter(
-        category=category.pk
+    return Subcategory.objects.select_related('category', 'user').filter(
+        category=category.pk,
+        user=user
     )
