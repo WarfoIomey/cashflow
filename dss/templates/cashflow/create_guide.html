@@ -4,16 +4,19 @@
   {% if "/edit/" in request.path %}
      Редактирование {% if "/subcategory/" in request.path %} подкатегории
     {% elif "/category/" in request.path %} категории
+    {% elif "/status/" in request.path %} статуса
     {% else %} типа
     {% endif %}
   {% elif "/delete/" in request.path %}
     Удаление {% if "/subcategory/" in request.path %} подкатегории
     {% elif "/category/" in request.path %} категории
+    {% elif "/status/" in request.path %} статуса
     {% else %} типа
     {% endif %}
   {% else %}
     Создание  {% if "/subcategory/" in request.path %} подкатегории
     {% elif "/category/" in request.path %} категории
+    {% elif "/status/" in request.path %} статуса
     {% else %} типа
     {% endif %}
   {% endif %}
@@ -25,16 +28,19 @@
         {% if "/edit/" in request.path %}
           Редактирование {% if "/subcategory/" in request.path %} подкатегории
           {% elif "/category/" in request.path %} категории
+          {% elif "/status/" in request.path %} статуса
           {% else %} типа
           {% endif %}
         {% elif "/delete/" in request.path %}
           Удаление {% if "/subcategory/" in request.path %} подкатегории
           {% elif "/category/" in request.path %} категории
+          {% elif "/status/" in request.path %} статуса
           {% else %} типа
           {% endif %}
         {% else %}
           Добавление {% if "/subcategory/" in request.path %} подкатегории
           {% elif "/category/" in request.path %} категории
+          {% elif "/status/" in request.path %} статуса
           {% else %} типа
           {% endif %}
         {% endif %}
