@@ -88,7 +88,6 @@ class RecordCreateView(LoginRequiredMixin, RecordEditMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.user = self.request.user
-        form.instance.created_at = timezone.now()
         return super(RecordCreateView, self).form_valid(form)
 
 
@@ -131,6 +130,7 @@ class RecordUpdateView(OnlyAuthorMixin, RecordEditMixin, UpdateView):
 
 class RecordDeleteView(OnlyAuthorMixin, RecordEditMixin, DeleteView):
     """Удаление записи."""
+
     pk_url_kwarg: str = 'record_id'
     template_name: str = 'cashflow/create.html'
     success_url = reverse_lazy('cashflow:index')
