@@ -2,7 +2,8 @@ from django.urls import path
 
 from . import views
 
-app_name = 'cashflow'
+
+app_name: str = 'cashflow'
 
 urlpatterns = [
     path(
@@ -24,6 +25,21 @@ urlpatterns = [
         'record/create/',
         views.RecordCreateView.as_view(),
         name='create_record'
+    ),
+    path(
+        'record/<int:record_id>/',
+        views.RecordDetailView.as_view(),
+        name='record_detail'
+    ),
+    path(
+        'record/<int:record_id>/edit/',
+        views.RecordUpdateView.as_view(),
+        name='edit_record'
+    ),
+    path(
+        'record/<int:record_id>/delete/',
+        views.RecordDeleteView.as_view(),
+        name='delete_record'
     ),
     path(
         'status/',
@@ -121,12 +137,7 @@ urlpatterns = [
             'type/<int:type_id>/category/<slug:category_slug>/'
             'subcategory/<slug:sub_slug>'
         ),
-        views.SubcategoryDetailListView.as_view(),
+        views.SubcategoryDetailView.as_view(),
         name='subcategory_detail'
-    ),
-    path(
-        'profile/<str:username>/',
-        views.ProfileDetailView.as_view(),
-        name='profile'
     ),
 ]
