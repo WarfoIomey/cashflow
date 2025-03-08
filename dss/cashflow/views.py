@@ -5,16 +5,18 @@ from django.views.generic import (
 )
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.urls import reverse, reverse_lazy
 
-from .models import Record, TypeMoney, Category, SubCategory, StatusMoney
-from .forms import (
-    RecordForm,
-    TypeForm,
-    CategoryForm,
-    SubcategoryForm,
-    StatusForm,
+from .models import Record, Type, Category, Subcategory, Status
+from .mixins import (
+    StatusEditMixin,
+    TypeEditMixin,
+    CategoryEditMixin, 
+    SubcategoryEditMixin,
+    OnlyAuthorMixin
 )
+from .forms import RecordForm, TypeForm, StatusForm, RecordFilterForm
 from .utils import get_types, get_categorys, get_subcategorys, get_status
 
 
@@ -30,50 +32,86 @@ class RecordListView(LoginRequiredMixin, ListView):
     template_name = 'cashflow/index.html'
     paginate_by = RECORD_PER_PAGE
 
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(user=self.request.user)
+        form = RecordFilterForm(self.request.GET)
+
+        if form.is_valid():
+            if form.cleaned_data["start_date"]:
+                queryset = queryset.filter(
+                    created_atdategte=form.cleaned_data["start_date"]
+                )
+            if form.cleaned_data["end_date"]:
+                queryset = queryset.filter(
+                    created_atdatelte=form.cleaned_data["end_date"]
+                )
+            if form.cleaned_data["status"]:
+                queryset = queryset.filter(status=form.cleaned_data["status"])
+            if form.cleaned_data["type"]:
+                queryset = queryset.filter(type=form.cleaned_data["type"])
+            if form.cleaned_data["category"]:
+                queryset = queryset.filter(
+                    category=form.cleaned_data["category"]
+                )
+            if form.cleaned_data["subcategory"]:
+                queryset = queryset.filter(
+                    subcategory=form.cleaned_data["subcategory"]
+                )
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["form"] = RecordFilterForm(self.request.GET)
+        return context
+
 
 class RecordCreateView(LoginRequiredMixin, CreateView):
     model = Record
     template_name = 'cashflow/create.html'
     form_class = RecordForm
+    success_url = reverse_lazy('cashflow:index')
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super(RecordCreateView, self).form_valid(form)
 
 
 class StatusListView(LoginRequiredMixin, ListView):
-    model = StatusMoney
+    model = Status
     template_name = 'cashflow/list.html'
     paginate_by = RECORD_PER_PAGE
 
     def get_queryset(self):
-        return get_status()
+        return get_status(self.request.user)
 
 
 class StatusDetailView(LoginRequiredMixin, DetailView):
-    model = StatusMoney
+    model = Status
     template_name = 'cashflow/detail.html'
     pk_url_kwarg = 'status_id'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['status'] = get_object_or_404(
-            StatusMoney,
+            Status,
             id=self.kwargs['status_id']
         )
         return context
 
 
-class StatusCreateView(LoginRequiredMixin, CreateView):
-    model = StatusMoney
-    template_name = 'cashflow/create_guide.html'
-    form_class = StatusForm
+class StatusCreateView(LoginRequiredMixin, StatusEditMixin, CreateView):
 
     def get_success_url(self):
         return reverse('cashflow:status')
 
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
 
-class StatusUpdateView(LoginRequiredMixin, UpdateView):
-    model = StatusMoney
-    template_name = 'cashflow/create_guide.html'
+
+class StatusUpdateView(OnlyAuthorMixin, StatusEditMixin, UpdateView):
     pk_url_kwarg = 'status_id'
-    form_class = StatusForm
 
     def get_success_url(self):
         return reverse(
@@ -82,43 +120,38 @@ class StatusUpdateView(LoginRequiredMixin, UpdateView):
         )
 
 
-class StatusDeleteView(LoginRequiredMixin, DeleteView):
-    model = StatusMoney
-    template_name = 'cashflow/create_guide.html'
+class StatusDeleteView(OnlyAuthorMixin, StatusEditMixin, DeleteView):
     pk_url_kwarg = 'status_id'
-    form_class = StatusForm
     success_url = reverse_lazy('cashflow:status')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        status = get_object_or_404(StatusMoney, pk=self.kwargs['status_id'])
+        status = get_object_or_404(Status, pk=self.kwargs['status_id'])
         context['form'] = StatusForm(instance=status)
         return context
 
 
 class TypeListView(LoginRequiredMixin, ListView):
-    model = TypeMoney
+    model = Type
     template_name = 'cashflow/list.html'
     paginate_by = RECORD_PER_PAGE
 
     def get_queryset(self):
-        return get_types()
+        return get_types(self.request.user)
 
 
-class TypeCreateView(LoginRequiredMixin, CreateView):
-    model = TypeMoney
-    template_name = 'cashflow/create_guide.html'
-    form_class = TypeForm
+class TypeCreateView(LoginRequiredMixin, TypeEditMixin, CreateView):
 
     def get_success_url(self):
         return reverse('cashflow:type')
 
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
 
-class TypeUpdateView(LoginRequiredMixin, UpdateView):
-    model = TypeMoney
-    template_name = 'cashflow/create_guide.html'
+
+class TypeUpdateView(OnlyAuthorMixin, TypeEditMixin, UpdateView):
     pk_url_kwarg = 'type_id'
-    form_class = TypeForm
 
     def get_success_url(self):
         return reverse(
@@ -129,16 +162,13 @@ class TypeUpdateView(LoginRequiredMixin, UpdateView):
         )
 
 
-class TypeDeleteView(LoginRequiredMixin, DeleteView):
-    model = TypeMoney
-    template_name = 'cashflow/create_guide.html'
+class TypeDeleteView(OnlyAuthorMixin, TypeEditMixin, DeleteView):
     pk_url_kwarg = 'type_id'
-    form_class = TypeForm
     success_url = reverse_lazy('cashflow:type')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        type = get_object_or_404(TypeMoney, pk=self.kwargs['type_id'])
+        type = get_object_or_404(Type, pk=self.kwargs['type_id'])
         context['form'] = TypeForm(instance=type)
         return context
 
@@ -150,29 +180,27 @@ class TypeDetailCategoryListView(LoginRequiredMixin, ListView):
     pk_url_kwarg = 'type_id'
 
     def get_queryset(self):
-        return get_categorys(self.kwargs['type_id'])
+        return get_categorys(self.kwargs['type_id'], self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['type'] = get_object_or_404(
-            TypeMoney,
+            Type,
             id=self.kwargs['type_id']
         )
         return context
 
 
-class CategoryCreateView(LoginRequiredMixin, CreateView):
+class CategoryCreateView(LoginRequiredMixin, CategoryEditMixin, CreateView):
     type_card = None
-    model = Category
-    template_name = 'cashflow/create_guide.html'
-    form_class = CategoryForm
 
     def dispatch(self, request, *args, **kwargs):
-        self.type_card = get_object_or_404(TypeMoney, pk=kwargs['type_id'])
+        self.type_card = get_object_or_404(Type, pk=kwargs['type_id'])
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         form.instance.type = self.type_card
+        form.instance.user = self.request.user
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -182,11 +210,8 @@ class CategoryCreateView(LoginRequiredMixin, CreateView):
         )
 
 
-class CategoryUpdateView(LoginRequiredMixin, UpdateView):
-    model = Category
-    template_name = 'cashflow/create_guide.html'
+class CategoryUpdateView(OnlyAuthorMixin, CategoryEditMixin, UpdateView):
     slug_url_kwarg = 'category_slug'
-    form_class = CategoryForm
 
     def get_success_url(self):
         return reverse(
@@ -198,12 +223,8 @@ class CategoryUpdateView(LoginRequiredMixin, UpdateView):
         )
 
 
-class CategoryDeleteView(LoginRequiredMixin, DeleteView):
-    model = Category
-    template_name = 'cashflow/create_guide.html'
+class CategoryDeleteView(OnlyAuthorMixin, CategoryEditMixin, DeleteView):
     slug_url_kwarg = 'category_slug'
-    form_class = CategoryForm
-    # success_url = reverse_lazy('cashflow:type')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -224,13 +245,16 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
 
 
 class CategoryDetailSubcategoryListView(ListView):
-    model = SubCategory
+    model = Subcategory
     paginate_by = RECORD_PER_PAGE
     slug_url_kwarg = 'category_slug'
     template_name = 'cashflow/detail.html'
 
     def get_queryset(self):
-        return get_subcategorys(self.kwargs['category_slug'])
+        return get_subcategorys(
+            self.kwargs['category_slug'],
+            self.request.user
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -242,13 +266,16 @@ class CategoryDetailSubcategoryListView(ListView):
         return context
 
 
-class SubcategoryDetailListView(DetailView):
-    model = SubCategory
+class SubcategoryDetailListView(LoginRequiredMixin, DetailView):
+    model = Subcategory
     slug_url_kwarg = 'sub_slug'
     template_name = 'cashflow/detail.html'
 
     def get_queryset(self):
-        return get_subcategorys(self.kwargs['category_slug'])
+        return get_subcategorys(
+            self.kwargs['category_slug'],
+            self.request.user
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -257,11 +284,12 @@ class SubcategoryDetailListView(DetailView):
         return context
 
 
-class SubcategoryCreateView(LoginRequiredMixin, CreateView):
+class SubcategoryCreateView(
+    LoginRequiredMixin,
+    SubcategoryEditMixin,
+    CreateView
+):
     category_card = None
-    model = SubCategory
-    template_name = 'cashflow/create_guide.html'
-    form_class = SubcategoryForm
 
     def dispatch(self, request, *args, **kwargs):
         self.category_card = get_object_or_404(
@@ -272,6 +300,7 @@ class SubcategoryCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.category = self.category_card
+        form.instance.user = self.request.user
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -284,11 +313,8 @@ class SubcategoryCreateView(LoginRequiredMixin, CreateView):
         )
 
 
-class SubcategoryUpdateView(LoginRequiredMixin, UpdateView):
-    model = SubCategory
-    template_name = 'cashflow/create_guide.html'
+class SubcategoryUpdateView(OnlyAuthorMixin, SubcategoryEditMixin, UpdateView):
     slug_url_kwarg = 'sub_slug'
-    form_class = SubcategoryForm
 
     def get_success_url(self):
         return reverse(
@@ -301,16 +327,13 @@ class SubcategoryUpdateView(LoginRequiredMixin, UpdateView):
         )
 
 
-class SubcategoryDeleteView(LoginRequiredMixin, DeleteView):
-    model = SubCategory
-    template_name = 'cashflow/create_guide.html'
+class SubcategoryDeleteView(OnlyAuthorMixin, SubcategoryEditMixin, DeleteView):
     slug_url_kwarg = 'sub_slug'
-    form_class = SubcategoryForm 
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         subcategory = get_object_or_404(
-            SubCategory,
+            Subcategory,
             slug=self.kwargs['sub_slug']
         )
         context['form'] = StatusForm(instance=subcategory)
@@ -348,14 +371,18 @@ class ProfileDetailView(ListView):
 
 def load_categories(request):
     type_id = request.GET.get('type_id')
-    categories = Category.objects.filter(type_id=type_id).values('id', 'title')
+    categories = Category.objects.filter(
+        type_id=type_id,
+        user=request.user
+    ).values('id', 'title')
     return JsonResponse(list(categories), safe=False)
 
 
 def load_subcategories(request):
     category_id = request.GET.get('category_id')
-    subcategories = SubCategory.objects.filter(
-        category_id=category_id
+    subcategories = Subcategory.objects.filter(
+        category_id=category_id,
+        user=request.user,
     ).values('id', 'title')
     return JsonResponse(list(subcategories), safe=False)
 
