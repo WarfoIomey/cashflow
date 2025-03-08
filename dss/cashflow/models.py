@@ -67,6 +67,10 @@ class Record(models.Model):
         blank=False,
     )
 
+    class Meta:
+        verbose_name = 'Запись'
+        verbose_name_plural = 'Записи'
+
 
 class Status(models.Model):
     """Модель статуса денежных средств."""
