@@ -3,6 +3,43 @@
   Лента записей
 {% endblock %}
 {% block content %}
+  <h1 class="text-center mb-5">Список записей </h1>
+  <form method="get" class="mb-4">
+    <div class="card p-3 shadow-sm">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Дата с:</label>
+                {{ form.start_date }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Дата по:</label>
+                {{ form.end_date }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Статус:</label>
+                {{ form.status }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Тип:</label>
+                {{ form.type }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Категория:</label>
+                {{ form.category }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Подкатегория:</label>
+                {{ form.subcategory }}
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Фильтровать</button>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <a href="{% url 'cashflow:index' %}" class="btn btn-secondary w-100">Сбросить</a>
+            </div>
+        </div>
+    </div>
+  </form>
   {% for record in page_obj %}
     <article class="mb-5">
       {% include "includes/record_card.html" %}
