@@ -1,9 +1,12 @@
 # cashflow
+## Демо-версия проекта на сайте Pythoanywhere
+
+[cashlfow](https://warfolomey.pythonanywhere.com/)
 
 ## Стек технологий
 - Python 3.9
 - Django 3.2.16
-- Bootstrap5
+- Bootstrap5~
 - SQLite3
 - HTML
 - JavaScripts
@@ -94,5 +97,25 @@ python manage.py loaddata db.json
 ```
 python manage.py runserver
 ```
+## Интерфейс проекта
 
-
+![spisok-zapisey](![alt text](image.png))
+![Подробнее-записи](![alt text](image-1.png))
+![форма-создания-записи](![alt text](image-4.png))
+![Справочник-список-типов](![alt text](image-2.png))
+![Справочник-список-статусов](![alt text](image-3.png))
+![Справочник-форма-создания-статуса](![alt text](image-5.png))
+![Справочник-форма-создания-типа](![alt text](image-6.png))
+![Справочник-подробный-вывод-типа](![alt text](image-7.png))
+![Справочник-форма-создания-категории](![alt text](image-8.png))
+![Справочник-Форма-редактирования-типа](![alt text](image-9.png))
+![Справочник-Форма-удаления-типа](![alt text](image-10.png))
+![Справочник-подробный-вывод-категории](![alt text](image-11.png))
+![Справочник-форма-создания-подкатегории](![alt text](image-12.png))
+![Справочник-форма-редактирования-категории](![alt text](image-13.png))
+![Справочник-форма-удаление-категории](![alt text](image-14.png))
+![Справочник-вывод-подкатегорий](![alt text](image-15.png))
+![Справочник-форма-редактирования-подкатегории](![alt text](image-16.png))
+![Справочник-форма-удаления-подкатегории](![alt text](image-17.png))
+![Форма-входа](![alt text](image-19.png))
+![Форма-регистрации](![alt text](image-20.png))
