@@ -99,7 +99,7 @@ python manage.py runserver
 ```
 ## Интерфейс проекта
 
-![список-записей](/screenshot/image.png)
+![список-записей](/screenshot/image.png, "Список записей")
 ![Подробнее-записи](/screenshot/image-1.png)
 ![форма-создания-записи](/screenshot/image-4.png)
 ![Справочник-список-типов](/screenshot/image-2.png)
