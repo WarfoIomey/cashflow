@@ -10,7 +10,6 @@ from django.views.generic import (
     UpdateView
 )
 from django.urls import reverse, reverse_lazy
-from django.utils import timezone
 
 
 from .models import Category, Type, Record, Subcategory, Status
