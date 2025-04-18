@@ -143,3 +143,5 @@ LOGIN_REDIRECT_URL = 'cashflow:index'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 MEDIA_URL = 'media/'
+
+PAGINATIONS = 3

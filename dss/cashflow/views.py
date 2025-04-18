@@ -9,8 +9,8 @@ from django.views.generic import (
     ListView,
     UpdateView
 )
+from django.conf import settings
 from django.urls import reverse, reverse_lazy
-
 
 from .models import Category, Type, Record, Subcategory, Status
 from .mixins import (
@@ -25,8 +25,6 @@ from .forms import RecordForm, RecordFilterForm, TypeForm, StatusForm
 from .utils import get_types, get_categorys, get_subcategorys, get_status
 
 
-RECORD_PER_PAGE: int = 3
-
 User = get_user_model()
 
 
@@ -35,7 +33,7 @@ class RecordListView(LoginRequiredMixin, ListView):
 
     model = Record
     template_name: str = 'cashflow/index.html'
-    paginate_by: int = RECORD_PER_PAGE
+    paginate_by: int = settings.PAGINATIONS
 
     def get_queryset(self):
         queryset = super().get_queryset().filter(user=self.request.user)
@@ -70,7 +68,6 @@ class RecordListView(LoginRequiredMixin, ListView):
                 queryset = queryset.filter(
                     subcategory=form.cleaned_data["subcategory"]
                 )
-
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -146,7 +143,7 @@ class StatusListView(LoginRequiredMixin, ListView):
 
     model = Status
     template_name: str = 'cashflow/list.html'
-    paginate_by: int = RECORD_PER_PAGE
+    paginate_by: int = settings.PAGINATIONS
 
     def get_queryset(self):
         return get_status(self.request.user)
@@ -209,7 +206,7 @@ class TypeListView(LoginRequiredMixin, ListView):
 
     model = Type
     template_name: str = 'cashflow/list.html'
-    paginate_by: int = RECORD_PER_PAGE
+    paginate_by: int = settings.PAGINATIONS
 
     def get_queryset(self):
         return get_types(self.request.user)
@@ -258,7 +255,7 @@ class TypeDetailCategoryListView(LoginRequiredMixin, ListView):
 
     model = Category
     template_name: str = 'cashflow/detail.html'
-    paginate_by: int = RECORD_PER_PAGE
+    paginate_by: int = settings.PAGINATIONS
     pk_url_kwarg: str = 'type_id'
 
     def get_queryset(self):
@@ -268,7 +265,8 @@ class TypeDetailCategoryListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['type'] = get_object_or_404(
             Type,
-            id=self.kwargs['type_id']
+            id=self.kwargs['type_id'],
+            user=self.request.user,
         )
         return context
 
@@ -336,7 +334,7 @@ class CategoryDetailSubcategoryListView(ListView):
     """Получение всех подкатегорий определенной категории."""
 
     model = Subcategory
-    paginate_by: int = RECORD_PER_PAGE
+    paginate_by: int = settings.PAGINATIONS
     slug_url_kwarg: str = 'category_slug'
     template_name: str = 'cashflow/detail.html'
 
@@ -350,7 +348,8 @@ class CategoryDetailSubcategoryListView(ListView):
         context = super().get_context_data(**kwargs)
         context['category'] = get_object_or_404(
             Category,
-            slug=self.kwargs['category_slug']
+            slug=self.kwargs['category_slug'],
+            user=self.request.user,
         )
         context['type_id'] = self.kwargs['type_id']
         return context

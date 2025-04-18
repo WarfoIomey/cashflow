@@ -68,6 +68,7 @@ class Record(models.Model):
     )
 
     class Meta:
+        ordering = ['id']
         verbose_name = 'Запись'
         verbose_name_plural = 'Записи'
 
@@ -91,6 +92,7 @@ class Status(models.Model):
     )
 
     class Meta:
+        ordering = ['id']
         verbose_name = 'Статус денежных средств'
         verbose_name_plural = 'Статус денежных средств'
 
@@ -118,6 +120,7 @@ class Type(models.Model):
     )
 
     class Meta:
+        ordering = ['id']
         verbose_name = 'Тип денежных средств'
         verbose_name_plural = 'Типы денежных средств'
 
@@ -158,6 +161,7 @@ class Category(models.Model):
     )
 
     class Meta:
+        ordering = ['id']
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
@@ -198,6 +202,7 @@ class Subcategory(models.Model):
     )
 
     class Meta:
+        ordering = ['id']
         verbose_name = 'Подкатегория'
         verbose_name_plural = 'Подкатегории'
 

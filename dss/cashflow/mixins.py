@@ -1,4 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.http import Http404
 from django.shortcuts import redirect
 
 from .models import Category, Record, Type, Status, Subcategory
@@ -15,7 +16,7 @@ class OnlyAuthorMixin(LoginRequiredMixin, UserPassesTestMixin):
     """Миксин для измениния записей только автором записей"""
 
     def handle_no_permission(self):
-        return redirect('cashflow:index')
+        raise Http404("Страница не найдена")
 
     def test_func(self):
         object = self.get_object()
